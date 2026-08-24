@@ -53,6 +53,35 @@ jobs:
          test -L drivers/kernelsu
          test -f drivers/kernelsu/Kconfig
 
+         cd drivers/kernelsu
+
+         echo "[+] Current remote:"
+         git remote -v
+
+         echo "[+] Switching remote to sidex15/KernelSU-Next"
+
+         git remote set-url origin \
+         https://github.com/sidex15/KernelSU-Next.git
+
+         git fetch origin legacy-susfs-v2
+
+         git checkout -B legacy-susfs-v2 origin/legacy-susfs-v2
+
+         git pull --ff-only origin legacy-susfs-v2
+
+         echo "[+] KernelSU-Next branch:"
+         git branch --show-current
+
+         echo "[+] KernelSU-Next commit:"
+         git log -1 --oneline
+
+         cd ../..
+
+         test -f drivers/kernelsu/Kconfig
+
+         echo "[+] KernelSU path:"
+         readlink -f drivers/kernelsu
+    
          echo "[+] KernelSU path:"
          readlink -f drivers/kernelsu
     
@@ -61,7 +90,7 @@ jobs:
            PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
         run: |
            # Base configuration
-           make O=$OUT ARCH=arm64 vendor/Mi8937-perf_defconfig
+           make O=$OUT ARCH=arm64 vendor/msm8937-perf_defconfig
 
            # Merge additional configuration fragments
            scripts/kconfig/merge_config.sh \
