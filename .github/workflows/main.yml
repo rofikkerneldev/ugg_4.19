@@ -88,6 +88,9 @@ jobs:
       - name: Build Kernel
         env:
            PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
+           ARCH: arm64
+           CROSS_COMPILE: aarch64-linux-gnu-
+           CROSS_COMPILE_ARM32: arm-linux-gnueabi-
         run: |
            # Base configuration
            make O=$OUT ARCH=arm64 vendor/msm8937-perf_defconfig
