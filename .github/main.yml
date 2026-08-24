@@ -1,0 +1,73 @@
+name: LG SM8250 Kernel Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install Dependencies
+        run: |
+          
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential flex git libssl-dev \
+          libncurses5-dev zip python3 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+
+      - name: Install Dependencies
+        run: |
+          
+           git config --global user.email "rkkernel@rofikkernel.com"
+           git config --global user.name "RofikKernelDev"
+         
+           
+    
+      - name: Fetch Toolchain
+        run: |
+          git clone --depth=1 https://github.com/kdrag0n/proton-clang.git toolchain
+
+      - name: Detect Kernel Version
+        id: info
+        run: |
+          V=$(grep "^VERSION =" Makefile | awk '{print $3}')
+          P=$(grep "^PATCHLEVEL =" Makefile | awk '{print $3}')
+          S=$(grep "^SUBLEVEL =" Makefile | awk '{print $3}')
+          echo "KVER=$V.$P.$S" >> $GITHUB_OUTPUT
+
+      - name: Build Kernel
+        env:
+           PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
+        run: |
+           # Base configuration
+           make O=$OUT vendor/Mi8937-perf_defconfig
+
+           # Merge additional configuration fragments
+           scripts/kconfig/merge_config.sh \
+           -O "$OUT" \
+           "$OUT/.config" \
+           vendor/common.config \
+           vendor/feature/android-12.config \
+           vendor/feature/compat-vdso.config \
+           vendor/feature/exfat.config \
+           vendor/feature/kprobes.config \
+           vendor/feature/lmkd.config \
+           vendor/feature/wireguard.config
+
+            # Re-resolve configuration dependencies
+            make O=$OUT olddefconfig
+
+            # 4. Create Image.gz-dtb
+            # This joins the Image.gz and all generated DTBs into one file
+            cat out/arch/arm64/boot/Image.gz $(find out/arch/arm64/boot/dts/vendor -name "*.dtb") > out/arch/arm64/boot/Image.gz-dtb
+
+      - name: Upload Kernel Image
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-v${{ steps.info.outputs.KVER }}-Custom
+          path: out/arch/arm64/boot/Image.gz-dtb
+          
