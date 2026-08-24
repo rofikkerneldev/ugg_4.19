@@ -38,7 +38,24 @@ jobs:
           P=$(grep "^PATCHLEVEL =" Makefile | awk '{print $3}')
           S=$(grep "^SUBLEVEL =" Makefile | awk '{print $3}')
           echo "KVER=$V.$P.$S" >> $GITHUB_OUTPUT
+      - name: Setup KernelSU-Next
+        run: |
+         set -e
 
+         echo "[+] Installing KernelSU-Next legacy-susfs-v2"
+
+         curl -LSs \
+         "https://raw.githubusercontent.com/sidex15/KernelSU-Next/legacy-susfs-v2/kernel/setup.sh" \
+         | bash -s legacy-susfs-v2
+
+         echo "[+] KernelSU-Next setup complete"
+
+         test -L drivers/kernelsu
+         test -f drivers/kernelsu/Kconfig
+
+         echo "[+] KernelSU path:"
+         readlink -f drivers/kernelsu
+    
       - name: Build Kernel
         env:
            PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
