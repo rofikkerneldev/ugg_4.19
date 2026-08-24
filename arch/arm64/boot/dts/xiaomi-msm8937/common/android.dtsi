@@ -1,26 +1,3 @@
 / {
-	android,fstab_suffix = "qcom";
-};
-
-&firmware {
-	android {
-		fstab {
-			system {
-				compatible = "android,system";
-				dev = "/dev/block/platform/soc/7824900.sdhci/by-name/system";
-				type = "erofs";
-				mnt_flags = "ro";
-				fsmgr_flags = "wait";
-				status = "ok";
-			};
-			vendor {
-			    compatible = "android,vendor";
-				dev = "/dev/block/platform/soc/7824900.sdhci/by-name/cust";
-                type = "erofs";
-				mnt_flags = "ro";
-				fsmgr_flags = "wait";
-				status = "ok";
-			};
-		};
-	};
+    android,fstab_suffix = "qcom";
 };
