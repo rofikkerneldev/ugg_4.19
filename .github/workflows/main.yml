@@ -61,7 +61,7 @@ jobs:
            PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
         run: |
            # Base configuration
-           make O=$OUT vendor/Mi8937-perf_defconfig
+           make O=$OUT ARCH=arm64 vendor/Mi8937-perf_defconfig
 
            # Merge additional configuration fragments
            scripts/kconfig/merge_config.sh \
@@ -76,7 +76,7 @@ jobs:
            vendor/feature/wireguard.config
 
             # Re-resolve configuration dependencies
-            make O=$OUT olddefconfig
+            make O=$OUT ARCH=arm64 olddefconfig
 
             # 4. Create Image.gz-dtb
             # This joins the Image.gz and all generated DTBs into one file
