@@ -30,7 +30,7 @@ jobs:
       - name: Fetch Toolchain
         run: |
           git clone --depth=1 https://github.com/kdrag0n/proton-clang.git toolchain
-          git clone --depth=1 https://github.com/WireGuard/android_kernel_wireguard.git wireguard
+
       - name: Detect Kernel Version
         id: info
         run: |
@@ -41,38 +41,29 @@ jobs:
 
       - name: Build Kernel
         env:
-          PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
+           PATH: /usr/bin:${{ github.workspace }}/toolchain/bin:/bin
         run: |
-          # 1. Configuration
-          DEFCONFIG="vendor/kona-perf_defconfig"
-          CUSTOM_NAME="-rofikkerneltest" 
-          
-          export ARCH=arm64
-          export CROSS_COMPILE=aarch64-linux-gnu-
-          export CROSS_COMPILE_ARM32=arm-linux-gnueabi-
-          bash wireguard/patch-kernel.sh .
-          # 2. Initialize Config
-          make O=out $DEFCONFIG
-          
-          # 3. Compile Kernel and DTBs
-          # Note: We added 'dtbs' to the targets
-          make -j$(nproc --all) O=out \
-               ARCH=arm64 \
-               CC=clang \
-               LD=ld.lld \
-               AR=llvm-ar \
-               NM=llvm-nm \
-               OBJCOPY=llvm-objcopy \
-               OBJDUMP=llvm-objdump \
-               STRIP=llvm-strip \
-               CROSS_COMPILE=$CROSS_COMPILE \
-               CROSS_COMPILE_ARM32=$CROSS_COMPILE_ARM32 \
-               LOCALVERSION=$CUSTOM_NAME \
-               Image.gz dtbs
+           # Base configuration
+           make O=$OUT vendor/Mi8937-perf_defconfig
 
-          # 4. Create Image.gz-dtb
-          # This joins the Image.gz and all generated DTBs into one file
-          cat out/arch/arm64/boot/Image.gz $(find out/arch/arm64/boot/dts/vendor -name "*.dtb") > out/arch/arm64/boot/Image.gz-dtb
+           # Merge additional configuration fragments
+           scripts/kconfig/merge_config.sh \
+           -O "$OUT" \
+           "$OUT/.config" \
+           vendor/common.config \
+           vendor/feature/android-12.config \
+           vendor/feature/compat-vdso.config \
+           vendor/feature/exfat.config \
+           vendor/feature/kprobes.config \
+           vendor/feature/lmkd.config \
+           vendor/feature/wireguard.config
+
+            # Re-resolve configuration dependencies
+            make O=$OUT olddefconfig
+
+            # 4. Create Image.gz-dtb
+            # This joins the Image.gz and all generated DTBs into one file
+            cat out/arch/arm64/boot/Image.gz $(find out/arch/arm64/boot/dts/vendor -name "*.dtb") > out/arch/arm64/boot/Image.gz-dtb
 
       - name: Upload Kernel Image
         uses: actions/upload-artifact@v4
