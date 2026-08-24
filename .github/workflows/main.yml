@@ -105,7 +105,8 @@ jobs:
            vendor/feature/exfat.config \
            vendor/feature/kprobes.config \
            vendor/feature/lmkd.config \
-           vendor/feature/wireguard.config
+           vendor/feature/wireguard.config \
+           vendor/feature/ksu_static_hooks.config
 
             # Re-resolve configuration dependencies
             make O=$OUT ARCH=arm64 olddefconfig
